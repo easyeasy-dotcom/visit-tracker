@@ -197,6 +197,7 @@
         </div>
 
         <div class="button-group">
+            <button onclick="addTestData()">Add Test Data</button>
             <button onclick="clearData()">Clear All Data</button>
             <button onclick="exportData()">Export Data</button>
         </div>
@@ -222,9 +223,9 @@
         // Load visits from storage
         async function loadVisits() {
             try {
-                const result = await window.storage.get('visit-times');
-                if (result && result.value) {
-                    visits = JSON.parse(result.value);
+                const stored = localStorage.getItem('visit-times');
+                if (stored) {
+                    visits = JSON.parse(stored);
                 }
             } catch (error) {
                 console.log('No previous visits found, starting fresh');
@@ -235,7 +236,7 @@
         // Save visits to storage
         async function saveVisits() {
             try {
-                await window.storage.set('visit-times', JSON.stringify(visits));
+                localStorage.setItem('visit-times', JSON.stringify(visits));
             } catch (error) {
                 console.error('Error saving visits:', error);
             }
@@ -559,11 +560,46 @@
             });
         }
 
+        // Add test data for demonstration
+        async function addTestData() {
+            const now = new Date();
+            const testVisits = [
+                // Today at different times
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 30).toISOString(), date: now.toLocaleDateString(), time: '8:30:00 AM' },
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 15).toISOString(), date: now.toLocaleDateString(), time: '12:15:00 PM' },
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 45).toISOString(), date: now.toLocaleDateString(), time: '6:45:00 PM' },
+                
+                // Yesterday
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 9, 0).toISOString(), date: new Date(now.getTime() - 86400000).toLocaleDateString(), time: '9:00:00 AM' },
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 14, 30).toISOString(), date: new Date(now.getTime() - 86400000).toLocaleDateString(), time: '2:30:00 PM' },
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 20, 0).toISOString(), date: new Date(now.getTime() - 86400000).toLocaleDateString(), time: '8:00:00 PM' },
+                
+                // 2 days ago
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 10, 15).toISOString(), date: new Date(now.getTime() - 172800000).toLocaleDateString(), time: '10:15:00 AM' },
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 16, 20).toISOString(), date: new Date(now.getTime() - 172800000).toLocaleDateString(), time: '4:20:00 PM' },
+                
+                // 5 days ago
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 5, 7, 45).toISOString(), date: new Date(now.getTime() - 432000000).toLocaleDateString(), time: '7:45:00 AM' },
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 5, 19, 30).toISOString(), date: new Date(now.getTime() - 432000000).toLocaleDateString(), time: '7:30:00 PM' },
+                
+                // 10 days ago
+                { timestamp: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 10, 11, 0).toISOString(), date: new Date(now.getTime() - 864000000).toLocaleDateString(), time: '11:00:00 AM' },
+            ];
+            
+            visits.push(...testVisits);
+            await saveVisits();
+            updateStats();
+            createVisitChart();
+            createActivityChart();
+            
+            alert('✅ Test data added! You can now see visits at different times throughout multiple days.');
+        }
+
         // Clear all data
         async function clearData() {
             if (confirm('Are you sure you want to clear all visit data? This cannot be undone.')) {
                 visits = [];
-                await window.storage.delete('visit-times');
+                localStorage.removeItem('visit-times');
                 updateStats();
                 createVisitChart();
                 createActivityChart();
