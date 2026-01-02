@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visit Time Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            text-align: center;
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .date-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .date-selector label {
+            font-size: 1.1em;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .date-selector input[type="date"] {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .date-selector input[type="date"]:hover {
+            border-color: #764ba2;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .date-selector button {
+            padding: 10px 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.active {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .period-btn {
+            padding: 10px 25px;
+            font-size: 0.95em;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .greeting {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .quote {
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .quote-author {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .milestone-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(245, 87, 108, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .stat-number {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Visit Tracker</h1>
+        <p class="subtitle">Your personal visit history</p>
+        
+        <div class="welcome-message" id="welcomeMessage"></div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalVisits">0</div>
+                <div class="stat-label">Total Visits</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="currentStreak">0</div>
+                <div class="stat-label">Day Streak 🔥</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="daysLogged">0</div>
+                <div class="stat-label" id="daysLoggedLabel">Days Logged</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="currentTime">--:--</div>
+                <div class="stat-label">Current Time</div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="mostActiveTime">--:--</div>
+                <div class="stat-label">Most Active Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgVisitsPerDay">0</div>
+                <div class="stat-label">Avg Visits/Day</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="favoriteDay">-</div>
+                <div class="stat-label">Favorite Day</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="dailyGoalProgress">0%</div>
+                <div class="stat-label">Daily Goal (3 visits)</div>
+            </div>
+        </div>
+
+        <div class="period-selector">
+            <button class="period-btn active" onclick="changePeriod(30)">Last 30 Days</button>
+            <button class="period-btn" onclick="changePeriod(40)">Last 40 Days</button>
+            <button class="period-btn" onclick="changePeriod(50)">Last 50 Days</button>
+        </div>
+
+        <h3 class="chart-title">🕐 Visit Times Throughout the Day</h3>
+        <div class="date-selector">
+            <label for="dateFilter">Select Date:</label>
+            <input type="date" id="dateFilter" onchange="filterByDate()">
+            <button onclick="showAllDates()">Show All Dates</button>
+        </div>
+        <div class="chart-container">
+            <canvas id="visitChart"></canvas>
+        </div>
+
+        <h3 class="chart-title">📅 Login Activity Tracker</h3>
+        <div class="chart-container">
+            <canvas id="activityChart"></canvas>
+        </div>
+
+        <div class="button-group">
+            <button onclick="addTestData()">Add Test Data</button>
+            <button onclick="clearData()">Clear All Data</button>
+            <button onclick="exportData()">Export Data</button>
+        </div>
+    </div>
+
+    <script>
+        let visitChart;
+        let activityChart;
+        let visits = [];
+        let currentPeriod = 30;
+        let selectedDate = null;
+
+        // Inspirational quotes
+        const quotes = [
+            { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+            { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+            { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+            { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+            { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+            { text: "Everything you've ever wanted is on the other side of fear.", author: "George Addair" },
+            { text: "Believe in yourself. You are braver than you think, more talented than you know, and capable of more than you imagine.", author: "Roy T. Bennett" },
+            { text: "I learned that courage was not the absence of fear, but the triumph over it.", author: "Nelson Mandela" },
+            { text: "There is only one way to avoid criticism: do nothing, say nothing, and be nothing.", author: "Aristotle" },
+            { text: "Do what you can with all you have, wherever you are.", author: "Theodore Roosevelt" },
+            { text: "Success is not how high you have climbed, but how you make a positive difference to the world.", author: "Roy T. Bennett" },
+            { text: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
+            { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
+            { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+            { text: "Keep your face always toward the sunshine—and shadows will fall behind you.", author: "Walt Whitman" },
+            { text: "What lies behind us and what lies before us are tiny matters compared to what lies within us.", author: "Ralph Waldo Emerson" },
+            { text: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+            { text: "Your time is limited, don't waste it living someone else's life.", author: "Steve Jobs" },
+            { text: "Whether you think you can or you think you can't, you're right.", author: "Henry Ford" },
+            { text: "The only person you are destined to become is the person you decide to be.", author: "Ralph Waldo Emerson" },
+            { text: "Go confidently in the direction of your dreams! Live the life you've imagined.", author: "Henry David Thoreau" },
+            { text: "When you have a dream, you've got to grab it and never let go.", author: "Carol Burnett" },
+            { text: "Nothing is impossible. The word itself says 'I'm possible!'", author: "Audrey Hepburn" },
+            { text: "There is nothing impossible to they who will try.", author: "Alexander the Great" },
+            { text: "The bad news is time flies. The good news is you're the pilot.", author: "Michael Altshuler" },
+            { text: "Life has got all those twists and turns. You've got to hold on tight and off you go.", author: "Nicole Kidman" },
+            { text: "Keep your eyes on the stars, and your feet on the ground.", author: "Theodore Roosevelt" },
+            { text: "You are never too old to set another goal or to dream a new dream.", author: "C.S. Lewis" },
+            { text: "Try to be a rainbow in someone else's cloud.", author: "Maya Angelou" },
+            { text: "You do not find the happy life. You make it.", author: "Camilla Eyring Kimball" }
+        ];
+
+        // Initialize on page load
+        async function init() {
+            await loadVisits();
+            await logVisit();
+            updateWelcomeMessage();
+            updateStats();
+            setDefaultDate();
+            createVisitChart();
+            createActivityChart();
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // Load visits from storage
+        async function loadVisits() {
+            try {
+                const stored = localStorage.getItem('visit-times');
+                if (stored) {
+                    visits = JSON.parse(stored);
+                }
+            } catch (error) {
+                console.log('No previous visits found, starting fresh');
+                visits = [];
+            }
+        }
+
+        // Save visits to storage
+        async function saveVisits() {
+            try {
+                localStorage.setItem('visit-times', JSON.stringify(visits));
+            } catch (error) {
+                console.error('Error saving visits:', error);
+            }
+        }
+
+        // Log current visit
+        async function logVisit() {
+            const now = new Date();
+            visits.push({
+                timestamp: now.toISOString(),
+                date: now.toLocaleDateString(),
+                time: now.toLocaleTimeString()
+            });
+            await saveVisits();
+        }
+
+        // Update welcome message with greeting and quote
+        function updateWelcomeMessage() {
+            const now = new Date();
+            const hour = now.getHours();
+            let greeting = "";
+            
+            if (hour >= 6 && hour < 12) {
+                greeting = "☀️ Good morning!";
+            } else if (hour >= 12 && hour < 18) {
+                greeting = "🌤️ Good afternoon!";
+            } else if (hour >= 18 && hour < 24) {
+                greeting = "🌙 Good evening!";
+            } else {
+                greeting = "🌟 Burning the midnight oil?";
+            }
+            
+            // Get random quote
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            
+            // Check for milestones
+            const milestone = checkMilestones();
+            
+            const welcomeHTML = `
+                <div class="greeting">${greeting}</div>
+                <div>Welcome back! Visit #${visits.length}</div>
+                ${milestone ? `<div class="milestone-badge">${milestone}</div>` : ''}
+                <div class="quote">"${randomQuote.text}"</div>
+                <div class="quote-author">— ${randomQuote.author}</div>
+            `;
+            
+            document.getElementById('welcomeMessage').innerHTML = welcomeHTML;
+        }
+
+        // Check for milestones
+        function checkMilestones() {
+            const totalVisits = visits.length;
+            const streak = calculateStreak();
+            
+            if (totalVisits === 1) return "🎉 First visit!";
+            if (totalVisits === 10) return "🎊 10 visits milestone!";
+            if (totalVisits === 50) return "⭐ 50 visits milestone!";
+            if (totalVisits === 100) return "💯 100 visits milestone!";
+            if (totalVisits === 500) return "🏆 500 visits milestone!";
+            if (totalVisits === 1000) return "👑 1000 visits milestone!";
+            
+            if (streak === 7) return "🔥 7-day streak!";
+            if (streak === 30) return "🔥 30-day streak!";
+            if (streak === 100) return "🔥 100-day streak!";
+            
+            return null;
+        }
+
+        // Calculate current streak
+        function calculateStreak() {
+            if (visits.length === 0) return 0;
+            
+            const uniqueDates = [...new Set(visits.map(v => v.date))].sort((a, b) => {
+                return new Date(b) - new Date(a);
+            });
+            
+            let streak = 0;
+            const today = new Date();
+            
+            for (let i = 0; i < uniqueDates.length; i++) {
+                const checkDate = new Date(today.getTime() - (i * 24 * 60 * 60 * 1000));
+                const checkDateStr = checkDate.toLocaleDateString();
+                
+                if (uniqueDates.includes(checkDateStr)) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalVisits').textContent = visits.length;
+            
+            // Calculate days logged in the current period
+            const uniqueDays = getUniqueDaysInPeriod(currentPeriod);
+            document.getElementById('daysLogged').textContent = `${uniqueDays}/${currentPeriod}`;
+            document.getElementById('daysLoggedLabel').textContent = `Days (Last ${currentPeriod})`;
+            
+            // Calculate streak
+            const streak = calculateStreak();
+            document.getElementById('currentStreak').textContent = streak;
+            
+            // Calculate most active time
+            const mostActiveTime = getMostActiveTime();
+            document.getElementById('mostActiveTime').textContent = mostActiveTime;
+            
+            // Calculate average visits per day
+            const avgVisits = getAverageVisitsPerDay();
+            document.getElementById('avgVisitsPerDay').textContent = avgVisits;
+            
+            // Calculate favorite day
+            const favDay = getFavoriteDay();
+            document.getElementById('favoriteDay').textContent = favDay;
+            
+            // Calculate daily goal progress
+            const goalProgress = getDailyGoalProgress();
+            document.getElementById('dailyGoalProgress').textContent = goalProgress;
+        }
+
+        // Get most active time of day
+        function getMostActiveTime() {
+            if (visits.length === 0) return "--:--";
+            
+            const hourCounts = {};
+            visits.forEach(visit => {
+                const hour = new Date(visit.timestamp).getHours();
+                hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+            });
+            
+            let maxHour = 0;
+            let maxCount = 0;
+            for (const [hour, count] of Object.entries(hourCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    maxHour = hour;
+                }
+            }
+            
+            return `${maxHour}:00`;
+        }
+
+        // Get average visits per day
+        function getAverageVisitsPerDay() {
+            if (visits.length === 0) return "0";
+            
+            const uniqueDates = new Set(visits.map(v => v.date));
+            const avg = (visits.length / uniqueDates.size).toFixed(1);
+            return avg;
+        }
+
+        // Get favorite day of the week
+        function getFavoriteDay() {
+            if (visits.length === 0) return "-";
+            
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const dayCounts = {};
+            
+            visits.forEach(visit => {
+                const day = new Date(visit.timestamp).getDay();
+                dayCounts[day] = (dayCounts[day] || 0) + 1;
+            });
+            
+            let maxDay = 0;
+            let maxCount = 0;
+            for (const [day, count] of Object.entries(dayCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    maxDay = day;
+                }
+            }
+            
+            return dayNames[maxDay];
+        }
+
+        // Get daily goal progress (goal = 3 visits per day)
+        function getDailyGoalProgress() {
+            const today = new Date().toLocaleDateString();
+            const todayVisits = visits.filter(v => v.date === today).length;
+            const goal = 3;
+            const progress = Math.min(100, Math.round((todayVisits / goal) * 100));
+            return `${progress}%`;
+        }
+
+        // Get unique days user logged in within a period
+        function getUniqueDaysInPeriod(days) {
+            const now = new Date();
+            const startDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+            
+            const uniqueDates = new Set();
+            visits.forEach(visit => {
+                const visitDate = new Date(visit.timestamp);
+                if (visitDate >= startDate) {
+                    uniqueDates.add(visit.date);
+                }
+            });
+            
+            return uniqueDates.size;
+        }
+
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString();
+        }
+
+        // Set default date to today
+        function setDefaultDate() {
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('dateFilter').value = dateStr;
+            selectedDate = today.toLocaleDateString();
+        }
+
+        // Filter chart by selected date
+        function filterByDate() {
+            const dateInput = document.getElementById('dateFilter').value;
+            if (dateInput) {
+                const selected = new Date(dateInput + 'T00:00:00');
+                selectedDate = selected.toLocaleDateString();
+                createVisitChart();
+            }
+        }
+
+        // Show all dates
+        function showAllDates() {
+            selectedDate = null;
+            document.getElementById('dateFilter').value = '';
+            createVisitChart();
+        }
+
+        // Change time period
+        function changePeriod(days) {
+            currentPeriod = days;
+            
+            // Update button states
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            updateStats();
+            createActivityChart();
+        }
+
+        // Create visits per day line chart
+        function createVisitChart() {
+            const ctx = document.getElementById('visitChart').getContext('2d');
+            
+            // Filter visits by selected date if any
+            let filteredVisits = visits;
+            if (selectedDate) {
+                filteredVisits = visits.filter(v => v.date === selectedDate);
+            }
+
+            // Group visits by time (hour) - only include hours with visits
+            const visitsByHour = {};
+            filteredVisits.forEach(visit => {
+                const visitDate = new Date(visit.timestamp);
+                const hour = visitDate.getHours();
+                visitsByHour[hour] = (visitsByHour[hour] || 0) + 1;
+            });
+
+            // Create data only for hours with visits
+            const labels = Object.keys(visitsByHour).sort((a, b) => a - b).map(h => `${h}:00`);
+            const data = labels.map(label => {
+                const hour = parseInt(label.split(':')[0]);
+                return visitsByHour[hour];
+            });
+
+            if (visitChart) {
+                visitChart.destroy();
+            }
+
+            const chartTitle = selectedDate ? `Visits on ${selectedDate}` : 'All Visits';
+
+            // If no data, show empty chart
+            if (labels.length === 0) {
+                visitChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Number of Visits',
+                            data: [],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'No visit data available',
+                                font: { size: 15, weight: 'bold' }
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Number of Visits' } },
+                            x: { title: { display: true, text: 'Time of Day' } }
+                        }
+                    }
+                });
+                return;
+            }
+
+            visitChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Number of Visits',
+                        data: data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: chartTitle,
+                            font: {
+                                size: 15,
+                                weight: 'bold'
+                            },
+                            padding: 10
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    const count = context.parsed.y;
+                                    return `Visits: ${count}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Number of Visits',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time of Day',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create activity tracking bar chart
+        function createActivityChart() {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            
+            // Generate last N days
+            const now = new Date();
+            const labels = [];
+            const data = [];
+            
+            for (let i = currentPeriod - 1; i >= 0; i--) {
+                const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+                const dateStr = date.toLocaleDateString();
+                labels.push(dateStr);
+                
+                // Check if user visited on this day
+                const hasVisit = visits.some(visit => visit.date === dateStr);
+                data.push(hasVisit ? 1 : 0);
+            }
+
+            if (activityChart) {
+                activityChart.destroy();
+            }
+
+            // Check if there's any data
+            const hasAnyData = data.some(val => val === 1);
+
+            activityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Login Activity',
+                        data: data,
+                        backgroundColor: data.map(val => val === 1 ? 'rgba(118, 75, 162, 0.8)' : 'rgba(200, 200, 200, 0.3)'),
+                        borderColor: data.map(val => val === 1 ? '#764ba2' : '#ccc'),
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        title: {
+                            display: !hasAnyData,
+                            text: 'No login data available',
+                            font: { size: 15, weight: 'bold' }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y === 1 ? '✓ Logged in' : '✗ No login';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                stepSize: 1,
+                                callback: function(value) {
+                                    return value === 1 ? '✓' : '✗';
+                                },
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Add test data for demonstration
+        async function addTestData() {
+            const now = new Date();
+            const testVisits = [];
+            
+            // Generate visits across 10-15 different days with multiple visits per day
+            const numDays = Math.floor(Math.random() * 6) + 10; // 10-15 days
+            
+            for (let i = 0; i < numDays; i++) {
+                // Random day in the past 30 days
+                const daysAgo = Math.floor(Math.random() * 30);
+                const date = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+                const dateStr = date.toLocaleDateString();
+                
+                // 2-5 visits per day for variety
+                const visitsPerDay = Math.floor(Math.random() * 4) + 2;
+                
+                for (let v = 0; v < visitsPerDay; v++) {
+                    // Random hour (6 AM to 11 PM for realistic usage)
+                    const hour = Math.floor(Math.random() * 18) + 6;
+                    const minute = Math.floor(Math.random() * 60);
+                    
+                    const timestamp = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, minute);
+                    const timeStr = timestamp.toLocaleTimeString();
+                    
+                    testVisits.push({
+                        timestamp: timestamp.toISOString(),
+                        date: dateStr,
+                        time: timeStr
+                    });
+                }
+            }
+            
+            visits.push(...testVisits);
+            localStorage.setItem('visit-times', JSON.stringify(visits));
+            updateStats();
+            createVisitChart();
+            createActivityChart();
+            
+            alert(`✅ Added ${testVisits.length} random test visits across ${numDays} different days!`);
+        }
+
+        // Clear all data
+        function clearData() {
+            if (confirm('Are you sure you want to clear all visit data? This cannot be undone.')) {
+                visits = [];
+                localStorage.removeItem('visit-times');
+                selectedDate = null;
+                document.getElementById('dateFilter').value = '';
+                document.getElementById('totalVisits').textContent = '0';
+                document.getElementById('daysLogged').textContent = `0/${currentPeriod}`;
+                document.getElementById('currentStreak').textContent = '0';
+                document.getElementById('mostActiveTime').textContent = '--:--';
+                document.getElementById('avgVisitsPerDay').textContent = '0';
+                document.getElementById('favoriteDay').textContent = '-';
+                document.getElementById('dailyGoalProgress').textContent = '0%';
+                
+                // Destroy and recreate empty charts
+                if (visitChart) {
+                    visitChart.destroy();
+                    visitChart = null;
+                }
+                if (activityChart) {
+                    activityChart.destroy();
+                    activityChart = null;
+                }
+                
+                createVisitChart();
+                createActivityChart();
+                document.getElementById('welcomeMessage').innerHTML = '<div class="greeting">🗑️ All data cleared!</div><div>Start fresh with your first visit.</div>';
+            }
+        }
+
+        // Export data as JSON
+        function exportData() {
+            const dataStr = JSON.stringify(visits, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'visit-history.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize everything when page loads
+        init();
+    </script>
+</body>
+</html>
